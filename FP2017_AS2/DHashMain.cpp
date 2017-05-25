@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include "md5.h"
 
 using namespace std;
 
@@ -57,6 +58,35 @@ StElement getToken(char* convStr) {
 	return bufElement;
 }
 
+string md5(const string strMd5) {
+	md5_state_t state;
+	md5_byte_t digest[16];
+	char hex_output[16 * 2 + 1];
+	int di;
+	
+	md5_init(&state);
+	md5_append(&state, (const md5_byte_t *)strMd5.c_str(), strMd5.length());
+	md5_finish(&state, digest);
+	for (di = 0; di < 16; ++di)
+		sprintf(hex_output + di * 2, "%02x", digest[di]);
+
+	return hex_output;
+}
+
+vector<string> dataToHash(vector<StElement> origin) {
+	string convHash;
+	vector<string> myhash;
+	vector<StElement>::iterator itor;
+
+	for (itor = origin.begin(); itor != origin.end(); itor++) {
+		to_string(itor->getSID());
+		convHash = md5(convHash);
+		myhash.push_back(convHash);
+		cout << convHash << endl;
+	}
+
+	return myhash;
+}
 int main() {
 	
 	ifstream is;
@@ -69,6 +99,7 @@ int main() {
 	string bufStr;
 	StElement bufElement;
 	vector<StElement> oData;
+	vector<string> ohash;
 
 	// get LIST_SIZE
 	getline(is, bufStr);
@@ -86,7 +117,7 @@ int main() {
 		oData.push_back(bufElement);
 	}
 
-	cout << "end";
+	ohash = dataToHash(oData);
 	is.close();
 	return 0;
 }
