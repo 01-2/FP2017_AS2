@@ -73,8 +73,8 @@ int main() {
 	// get LIST_SIZE
 	getline(is, bufStr);
 	// fatal error : heap corruption
-	convStr = (char*)malloc(sizeof(bufStr)+1);
-	convStr[sizeof(bufStr)] = '\0';
+	convStr = new char[sizeof(bufStr)];
+	
 	strcpy(convStr, bufStr.c_str());
 	convStr = strtok(convStr, ",");
 	LIST_SIZE = atoi(convStr);
@@ -86,7 +86,6 @@ int main() {
 		oData.push_back(bufElement);
 	}
 
-	free(convStr);
 	cout << "end";
 	is.close();
 	return 0;
