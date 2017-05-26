@@ -31,6 +31,13 @@ public:
 	// functions
 	void setElement(char* , unsigned int , float , unsigned int );
 };
+class Bucket {
+	// bucket address table -> vector<Bucket>
+	vector<StElement> curBucket;
+
+public:
+
+};
 
 void StElement::setElement(char* _name, unsigned int _studentID, float _score, unsigned int _advisorID) {
 	setName(_name);
@@ -38,7 +45,6 @@ void StElement::setElement(char* _name, unsigned int _studentID, float _score, u
 	setScore(_score);
 	setAID(_advisorID);
 }
-
 StElement getToken(char* convStr) {
 	StElement bufElement;
 	char* tokList;
@@ -57,7 +63,6 @@ StElement getToken(char* convStr) {
 
 	return bufElement;
 }
-
 string md5(const string strMd5) {
 	md5_state_t state;
 	md5_byte_t digest[16];
@@ -72,7 +77,30 @@ string md5(const string strMd5) {
 
 	return hex_output;
 }
-
+string GetBinaryFromHex(string sHex){
+	string sReturn = "";
+	for (int i = 0; i < sHex.length(); ++i){
+		switch (sHex[i]){
+			case '0': sReturn.append("0000"); break;
+			case '1': sReturn.append("0001"); break;
+			case '2': sReturn.append("0010"); break;
+			case '3': sReturn.append("0011"); break;
+			case '4': sReturn.append("0100"); break;
+			case '5': sReturn.append("0101"); break;
+			case '6': sReturn.append("0110"); break;
+			case '7': sReturn.append("0111"); break;
+			case '8': sReturn.append("1000"); break;
+			case '9': sReturn.append("1001"); break;
+			case 'a': sReturn.append("1010"); break;
+			case 'b': sReturn.append("1011"); break;
+			case 'c': sReturn.append("1100"); break;
+			case 'd': sReturn.append("1101"); break;
+			case 'e': sReturn.append("1110"); break;
+			case 'f': sReturn.append("1111"); break;
+		}
+	}
+	return sReturn;
+}
 vector<string> dataToHash(vector<StElement> origin) {
 	string convHash;
 	vector<string> myhash;
@@ -81,12 +109,14 @@ vector<string> dataToHash(vector<StElement> origin) {
 	for (itor = origin.begin(); itor != origin.end(); itor++) {
 		to_string(itor->getSID());
 		convHash = md5(convHash);
+		convHash = GetBinaryFromHex(convHash);
 		myhash.push_back(convHash);
 		cout << convHash << endl;
 	}
 
 	return myhash;
 }
+
 int main() {
 	
 	ifstream is;
