@@ -7,7 +7,7 @@
 #include <cassert>
 
 #define MIN_ORDER 2
-#define KEY_LENGTH 9
+#define KEY_LENGTH 6
 #define BUCKET_SIZE 128
 
 using namespace std;
@@ -31,6 +31,7 @@ public:
 	float getScore() { return score; }
 	unsigned int getAID() { return advisorID; }
 
+	
 	// functions
 	void setElement(char* , unsigned int , float , unsigned int );
 };
@@ -91,7 +92,7 @@ int insertRecord(StElement* rec, directory* dir){
 	int index = foreget(pseudokey, dir->header); // entry의 번호를 찾는다. 
 	leaf* bucket = dir->entry[index];    // 삽입하고자 하는 leaf
 
-	//////// 1. bucket을 확인해서 삽입하고자 하는 키가 이미 존재하는지 확인
+	// 1. bucket을 확인해서 삽입하고자 하는 키가 이미 존재하는지 확인
 	for (i = 0; i<bucket->count; i++){
 		if (bucket->pRecord[i]->getSID() == key){
 			printf("\n\nThe key is already exist!!!\n");
@@ -99,14 +100,14 @@ int insertRecord(StElement* rec, directory* dir){
 		}
 	}
 
-	////////// 2. bucket에 저장할 공간이 남아있다면 빈칸에 저장한다. 
+	// 2. bucket에 저장할 공간이 남아있다면 빈칸에 저장한다. 
 	if (bucket->count < BUCKET_SIZE){
 		bucket->pRecord[bucket->count] = rec;
 		bucket->count++;
 		return 1;   // 정상종료
 	}
 
-	////////// 3. bucket이 다 찼다면 overflow 처리
+	// 3. bucket이 다 찼다면 overflow 처리
 	while (1){
 		int n;
 		leaf* newBucket;  // 새로 만들 bucket;
@@ -123,7 +124,7 @@ int insertRecord(StElement* rec, directory* dir){
 			free(dir->entry);
 			dir->entry = newEntry;
 		}
-		////// 3-2. 이제 overflow가 생긴 leaf를 split한다. 
+		// 3-2. 이제 overflow가 생긴 leaf를 split한다. 
 		// 3-2-1. 새로운 bucket 생성
 		newBucket = (leaf*)malloc(sizeof(leaf));
 		newBucket->header = bucket->header;
@@ -176,55 +177,41 @@ void printDB(directory* dir, ofstream& os)
 	int i, k, j;
 	leaf* cBucket;
 	leaf* pBucket = NULL;
-	for (i = 0; i<pow_2(dir->header); i++)
-	{
-		int c = i;
-		for (k = pow_2(dir->header - 1); k>0; k /= 2)
-		{
-			os << c / k;
-			c = c%k;
-		}
-		os << "\t";
-		cBucket = dir->entry[i];
-		if (cBucket != pBucket)
-		{
-			os << cBucket->header << "\t";
-			os << cBucket->count << "\t" << endl;
-			for (j = 0; j<cBucket->count; j++)
-			{
-				os << cBucket->pRecord[j]->getSID() << " ";
-				os << cBucket->pRecord[j]->getName() << endl;
-			}
-		}
-		os << endl;
-		pBucket = cBucket;
-	}
-}
-void printTable(directory* dir, ofstream& os)
-{
-	int i, k, j;
-	leaf* cBucket;
-	leaf* pBucket = NULL;
 	for (i = 0; i<pow_2(dir->header); i++){
 		int c = i;
 		for (k = pow_2(dir->header - 1); k>0; k /= 2){
 			os << c / k;
 			c = c%k;
 		}
-		os << "\t";
 		cBucket = dir->entry[i];
-		if (cBucket != pBucket)	{
-			os << cBucket->count << "\t";
-			for (j = 0; j<cBucket->count; j++)	{
-				if ((j % 5) == 0)
-					os << endl;
-				else
-					os << cBucket->pRecord[j]->getSID() << " ";
+		if (cBucket != pBucket){
+			// os << cBucket->header << "\t";
+			os << "\t" << cBucket->count << "\t" << endl;
+			for (j = 0; j<cBucket->count; j++){
+				/*
+					Data structure :
+					char name[20];
+					unsigned int studentID;
+					float score;
+					unsigned int advisorID;
+				*/
+				os << cBucket->pRecord[j]->getName() << " ";
+				os << cBucket->pRecord[j]->getSID() << " ";
+				os << cBucket->pRecord[j]->getScore() << " ";
+				os << cBucket->pRecord[j]->getAID() << endl;
 			}
 		}
-		pBucket = cBucket;
 		os << endl;
+		pBucket = cBucket;
 	}
+}
+void printTable(vector<StElement> origin, ofstream& os){
+	os.open("Students.hash");
+	for (int i = 0; i < LIST_SIZE; i++) {
+		StElement* rec = &origin[i];
+		os << rec->getSID() << " " << makePseudokey(rec->getSID()) << endl;
+	}
+	os.close();
 }
 StElement getToken(char* convStr) {
 	StElement bufElement;
@@ -246,7 +233,7 @@ StElement getToken(char* convStr) {
 }
 
 int main() {
-	
+
 	ifstream is;
 	ofstream os;
 	int target = 0;
@@ -283,8 +270,7 @@ int main() {
 	dir->header = MIN_ORDER;
 	dir->divCount = pow_2(MIN_ORDER - 1);
 	dir->entry = (leaf**)malloc(sizeof(leaf*) * pow_2(MIN_ORDER));
-	for (int i = 0; i<pow_2(MIN_ORDER); i++)
-	{
+	for (int i = 0; i<pow_2(MIN_ORDER); i++)	{
 		dir->entry[i] = (leaf*)malloc(sizeof(leaf));
 		dir->entry[i]->header = 2;
 		dir->entry[i]->count = 0;
@@ -299,10 +285,7 @@ int main() {
 	}
 	printDB(dir, os);
 	os.close();
-
-	os.open("Students.hash");
-	printTable(dir, os);
-	os.close();
+	printTable(oData, os);
 	is.close();
 	return 0;
 }
