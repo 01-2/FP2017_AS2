@@ -142,7 +142,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DHashMain.cpp" />
+    <ClCompile Include="D:\Onedrive\OneDrive - pusan.ac.kr\3-1 강의자료\파일구조\FP2017_AS2\test\bplustree.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="DHashMain.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="md5.cpp" />
   </ItemGroup>
   <ItemGroup>

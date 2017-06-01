@@ -11,7 +11,6 @@
 #define BUCKET_SIZE 128
 
 using namespace std;
-
 unsigned int LIST_SIZE;
 
 class StElement {
@@ -35,14 +34,13 @@ public:
 	// functions
 	void setElement(char* , unsigned int , float , unsigned int );
 };
-
 void StElement::setElement(char* _name, unsigned int _studentID, float _score, unsigned int _advisorID) {
 	setName(_name);
 	setSID(_studentID);
 	setScore(_score);
 	setAID(_advisorID);
 }
-
+// 제곱을 해주는 함수
 int pow_2(int p){
 	int i;
 	int x = 1;
@@ -50,31 +48,27 @@ int pow_2(int p){
 		x *= 2;
 	return x;
 }
-
-//  pseudokey를 만들어서 return 한다. 
+// pseudokey를 만들어서 return 한다.
+// KEY 길이만큼 제곱 후 mod 연산을 통해 하위 KEY_LENGTH 키만큼 잘라낸다
 int makePseudokey(int key){
 	return key % pow_2(KEY_LENGTH);
 }
-
 //  상위 n bit를 돌려준다. 
 int foreget(int k, int n){
 	return k / pow_2(KEY_LENGTH - n);
 }
-
 typedef struct Leaf
 {
 	int header;
 	int count;  // 저장된 record의 갯수
 	StElement** pRecord; // 저장된 record의 주소를 가리키는 pointer의 배열
 } leaf;
-
 typedef struct Directory
 {
 	int header;
 	int divCount;  // directory의 header와 같은 header를 가진 leaf pair의 갯수
 	leaf** entry;
 } directory;
-
 StElement* retrieval(int key, directory* dir)
 {
 	int i;
@@ -97,8 +91,7 @@ int insertRecord(StElement* rec, directory* dir){
 	int index = foreget(pseudokey, dir->header); // entry의 번호를 찾는다. 
 	leaf* bucket = dir->entry[index];    // 삽입하고자 하는 leaf
 
-
-										 ////////// 1. bucket을 확인해서 삽입하고자 하는 키가 이미 존재하는지 확인
+	//////// 1. bucket을 확인해서 삽입하고자 하는 키가 이미 존재하는지 확인
 	for (i = 0; i<bucket->count; i++){
 		if (bucket->pRecord[i]->getSID() == key){
 			printf("\n\nThe key is already exist!!!\n");
@@ -178,9 +171,7 @@ int insertRecord(StElement* rec, directory* dir){
 		// 저장할 곳이 full이 아니면 2의 처음으로 돌아가서 다시 directory를 늘린다. 
 	}
 }
-
-
-void printTable(directory* dir, ofstream& os)
+void printDB(directory* dir, ofstream& os)
 {
 	int i, k, j;
 	leaf* cBucket;
@@ -190,35 +181,51 @@ void printTable(directory* dir, ofstream& os)
 		int c = i;
 		for (k = pow_2(dir->header - 1); k>0; k /= 2)
 		{
-			printf("%d", c / k);
 			os << c / k;
 			c = c%k;
 		}
-		printf("\t");
 		os << "\t";
 		cBucket = dir->entry[i];
 		if (cBucket != pBucket)
 		{
-			printf("%d\t", cBucket->header);
-			printf("%d\t", cBucket->count);
 			os << cBucket->header << "\t";
 			os << cBucket->count << "\t" << endl;
 			for (j = 0; j<cBucket->count; j++)
 			{
-				printf("%d:", cBucket->pRecord[j]->getSID());
 				os << cBucket->pRecord[j]->getSID() << " ";
-				printf("%s, ", cBucket->pRecord[j]->getName());
 				os << cBucket->pRecord[j]->getName() << endl;
 			}
 		}
-		printf("\n");
 		os << endl;
 		pBucket = cBucket;
 	}
 }
-
-
-
+void printTable(directory* dir, ofstream& os)
+{
+	int i, k, j;
+	leaf* cBucket;
+	leaf* pBucket = NULL;
+	for (i = 0; i<pow_2(dir->header); i++){
+		int c = i;
+		for (k = pow_2(dir->header - 1); k>0; k /= 2){
+			os << c / k;
+			c = c%k;
+		}
+		os << "\t";
+		cBucket = dir->entry[i];
+		if (cBucket != pBucket)	{
+			os << cBucket->count << "\t";
+			for (j = 0; j<cBucket->count; j++)	{
+				if ((j % 5) == 0)
+					os << endl;
+				else
+					os << cBucket->pRecord[j]->getSID() << " ";
+			}
+		}
+		pBucket = cBucket;
+		os << endl;
+	}
+}
 StElement getToken(char* convStr) {
 	StElement bufElement;
 	char* tokList;
@@ -237,37 +244,14 @@ StElement getToken(char* convStr) {
 
 	return bufElement;
 }
-string GetBinaryFromHex(string sHex){
-	string sReturn = "";
-	for (int i = 0; i < sHex.length(); ++i){
-		switch (sHex[i]){
-			case '0': sReturn.append("0000"); break;
-			case '1': sReturn.append("0001"); break;
-			case '2': sReturn.append("0010"); break;
-			case '3': sReturn.append("0011"); break;
-			case '4': sReturn.append("0100"); break;
-			case '5': sReturn.append("0101"); break;
-			case '6': sReturn.append("0110"); break;
-			case '7': sReturn.append("0111"); break;
-			case '8': sReturn.append("1000"); break;
-			case '9': sReturn.append("1001"); break;
-			case 'a': sReturn.append("1010"); break;
-			case 'b': sReturn.append("1011"); break;
-			case 'c': sReturn.append("1100"); break;
-			case 'd': sReturn.append("1101"); break;
-			case 'e': sReturn.append("1110"); break;
-			case 'f': sReturn.append("1111"); break;
-		}
-	}
-	return sReturn;
-}
 
 int main() {
 	
 	ifstream is;
 	ofstream os;
+	int target = 0;
 	is.open("sampleData.csv");
-	os.open("result.txt");
+	os.open("Students.DB");
 	if (is.is_open() == false){
 		cout << "File open Failed" << endl; return 1;
 	}
@@ -310,14 +294,15 @@ int main() {
 	for(int i = 0; i < LIST_SIZE; i++){
 		StElement* rec = &oData[i];
 		insertRecord(rec, dir);
-		printf("\n***  key : %d, name : %s 인 record를 저장, pseudokey : %d ***\n",
-			rec->getSID(), rec->getName(), makePseudokey(rec->getSID()));
-//		printf("\n\nPress Enter!!\n");
-//		cin >> enter;
+		/* printf("\n***  key : %d, name : %s 인 record를 저장, pseudokey : %d ***\n",
+			rec->getSID(), rec->getName(), makePseudokey(rec->getSID())); */
 	}
-	printTable(dir, os);
-
-	is.close();
+	printDB(dir, os);
 	os.close();
+
+	os.open("Students.hash");
+	printTable(dir, os);
+	os.close();
+	is.close();
 	return 0;
 }
