@@ -7,7 +7,7 @@
 #include <cassert>
 
 #define MIN_ORDER 2
-#define KEY_LENGTH 6
+#define KEY_LENGTH 9
 #define BUCKET_SIZE 128
 
 using namespace std;
@@ -31,7 +31,6 @@ public:
 	float getScore() { return score; }
 	unsigned int getAID() { return advisorID; }
 
-	
 	// functions
 	void setElement(char* , unsigned int , float , unsigned int );
 };
@@ -58,20 +57,17 @@ int makePseudokey(int key){
 int foreget(int k, int n){
 	return k / pow_2(KEY_LENGTH - n);
 }
-typedef struct Leaf
-{
+typedef struct Leaf{
 	int header;
 	int count;  // 저장된 record의 갯수
 	StElement** pRecord; // 저장된 record의 주소를 가리키는 pointer의 배열
 } leaf;
-typedef struct Directory
-{
+typedef struct Directory{
 	int header;
 	int divCount;  // directory의 header와 같은 header를 가진 leaf pair의 갯수
 	leaf** entry;
 } directory;
-StElement* retrieval(int key, directory* dir)
-{
+StElement* retrieval(int key, directory* dir){
 	int i;
 	int pseudokey = makePseudokey(key);    // pseudokey 생성
 	int index = foreget(pseudokey, dir->header);  // entry index
@@ -92,7 +88,7 @@ int insertRecord(StElement* rec, directory* dir){
 	int index = foreget(pseudokey, dir->header); // entry의 번호를 찾는다. 
 	leaf* bucket = dir->entry[index];    // 삽입하고자 하는 leaf
 
-	// 1. bucket을 확인해서 삽입하고자 하는 키가 이미 존재하는지 확인
+	// bucket을 확인해서 삽입하고자 하는 키가 이미 존재하는지 확인
 	for (i = 0; i<bucket->count; i++){
 		if (bucket->pRecord[i]->getSID() == key){
 			printf("\n\nThe key is already exist!!!\n");
@@ -100,18 +96,18 @@ int insertRecord(StElement* rec, directory* dir){
 		}
 	}
 
-	// 2. bucket에 저장할 공간이 남아있다면 빈칸에 저장한다. 
+	// bucket에 저장할 공간이 남아있다면 빈칸에 저장한다. 
 	if (bucket->count < BUCKET_SIZE){
 		bucket->pRecord[bucket->count] = rec;
 		bucket->count++;
 		return 1;   // 정상종료
 	}
 
-	// 3. bucket이 다 찼다면 overflow 처리
+	// bucket이 다 찼다면 overflow 처리
 	while (1){
 		int n;
 		leaf* newBucket;  // 새로 만들 bucket;
-						  //////  3-1. d < t+1인경우 => 먼저 디렉토리를 두배 늘린다 
+						  //////  d < t+1인경우 => 먼저 디렉토리를 두배 늘린다 
 		if (dir->header < bucket->header + 1){
 			int numEntry;    // 새로 만들어질 entry의 수
 			leaf** newEntry;
@@ -124,14 +120,14 @@ int insertRecord(StElement* rec, directory* dir){
 			free(dir->entry);
 			dir->entry = newEntry;
 		}
-		// 3-2. 이제 overflow가 생긴 leaf를 split한다. 
-		// 3-2-1. 새로운 bucket 생성
+		// 이제 overflow가 생긴 leaf를 split한다. 
+		// 새로운 bucket 생성
 		newBucket = (leaf*)malloc(sizeof(leaf));
 		newBucket->header = bucket->header;
 		newBucket->count = 0;
 		newBucket->pRecord = (StElement**)malloc(sizeof(StElement*) * BUCKET_SIZE);
 
-		// 3-2-2. bucket내의 record 분배
+		// bucket내의 record 분배
 		bucket->count = 0;
 		for (i = 0; i<BUCKET_SIZE; i++)
 		{
@@ -151,7 +147,7 @@ int insertRecord(StElement* rec, directory* dir){
 		if (bucket->header == dir->header)
 			dir->divCount++;
 
-		// 3-2-3. entry -> leaf 로의 pointer 조절
+		// entry -> leaf 로의 pointer 조절
 		n = pow_2(dir->header - bucket->header + 1);      // 나누어질 entry 수
 		ind = foreget(makePseudokey(key), bucket->header - 1) * n;   // 나누어질 entry중 첫번째 entry의 index
 
@@ -160,7 +156,7 @@ int insertRecord(StElement* rec, directory* dir){
 		for (i = 0; i<n / 2; i++, ind++)
 			dir->entry[ind] = newBucket;
 
-		// 3-2-4. 이제 다시 삽입될 노드를 저장한다. 
+		// 이제 다시 삽입될 노드를 저장한다. 
 		index = foreget(pseudokey, dir->header);
 		bucket = dir->entry[index];
 		if (bucket->count < BUCKET_SIZE) // 저장할 곳의 bucket이 full이 아니면 저장
@@ -172,17 +168,19 @@ int insertRecord(StElement* rec, directory* dir){
 		// 저장할 곳이 full이 아니면 2의 처음으로 돌아가서 다시 directory를 늘린다. 
 	}
 }
-void printDB(directory* dir, ofstream& os)
-{
-	int i, k, j;
+void printDB(directory* dir, ofstream& os){
+	int i, j;
 	leaf* cBucket;
 	leaf* pBucket = NULL;
 	for (i = 0; i<pow_2(dir->header); i++){
 		int c = i;
+		/*
 		for (k = pow_2(dir->header - 1); k>0; k /= 2){
-			os << c / k;
+			// os << c / k;
 			c = c%k;
 		}
+		*/
+		os << c;
 		cBucket = dir->entry[i];
 		if (cBucket != pBucket){
 			// os << cBucket->header << "\t";
@@ -195,23 +193,36 @@ void printDB(directory* dir, ofstream& os)
 					float score;
 					unsigned int advisorID;
 				*/
-				os << cBucket->pRecord[j]->getName() << " ";
-				os << cBucket->pRecord[j]->getSID() << " ";
-				os << cBucket->pRecord[j]->getScore() << " ";
+				os << cBucket->pRecord[j]->getName() << ", ";
+				os << cBucket->pRecord[j]->getSID() << ", ";
+				os << cBucket->pRecord[j]->getScore() << ", ";
 				os << cBucket->pRecord[j]->getAID() << endl;
 			}
 		}
-		os << endl;
+		else {
+			os << "\t" << "P" << "\t" << endl;
+		}
 		pBucket = cBucket;
 	}
 }
+
 void printTable(vector<StElement> origin, ofstream& os){
-	os.open("Students.hash");
+	FILE *fp;
+	fp = fopen("Students.hash", "wb");
+	// os.open("Students.hash");
+	int getInt;
+	int getPseudo;
 	for (int i = 0; i < LIST_SIZE; i++) {
 		StElement* rec = &origin[i];
-		os << rec->getSID() << " " << makePseudokey(rec->getSID()) << endl;
+		getInt = rec->getSID();
+		fwrite(&getInt, sizeof(int), 1, fp);
+		fwrite(" ", sizeof(" "), 1, fp);
+		getPseudo = makePseudokey(rec->getSID());
+		fwrite(&getPseudo, sizeof(int), 1, fp);
+		fwrite("\n", sizeof("\n"), 1, fp);
+		// os << rec->getSID() << " " << makePseudokey(rec->getSID()) << endl;
 	}
-	os.close();
+	// os.close();
 }
 StElement getToken(char* convStr) {
 	StElement bufElement;
@@ -243,7 +254,6 @@ int main() {
 		cout << "File open Failed" << endl; return 1;
 	}
 
-	char enter;
 	char* convStr;
 	string bufStr;
 	StElement bufElement;

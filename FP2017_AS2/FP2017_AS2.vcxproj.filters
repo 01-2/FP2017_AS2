@@ -24,6 +24,9 @@
     <ClCompile Include="D:\Onedrive\OneDrive - pusan.ac.kr\3-1 강의자료\파일구조\FP2017_AS2\test\bplustree.cpp">
       <Filter>리소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="complete.cpp">
+      <Filter>리소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="md5.h">
